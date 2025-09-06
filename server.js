@@ -82,6 +82,26 @@ app.get("/subscriptions", async(req, res) => {
     }
 });
 
+/**
+ * Delete a subscription
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ * @returns {object} - The subscription
+ */
+app.delete("/subscriptions/:donorId", async(req, res) => {
+    try{
+        const { donorId } = req.params;
+        if (!subscriptions[donorId]) {
+            return res.status(404).json({ error: "Subscription not found", message: "Failed to delete subscription" });
+        }
+        delete subscriptions[donorId];
+        return res.status(200).json({ message: "Subscription deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting subscription:", error);
+        res.status(500).json({ error: "Failed to delete subscription", message: error.message });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
