@@ -1,5 +1,6 @@
 import express from "express";
 import { analyzeCampaign, analyzeCampaignFallback } from "./llmService.js";
+import { convertToUSD, isCurrencySupported, getSupportedCurrencies } from "./currencyService.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -22,12 +23,39 @@ app.post("/subscriptions", async (req, res) => {
     try {
         const { donorId, amount, currency, interval, campaignDescription } = req.body;
 
+        // Validate required fields
+        if (!donorId || !amount || !currency || !interval || !campaignDescription) {
+            return res.status(400).json({
+                error: "Missing required fields",
+                message: "All fields (donorId, amount, currency, interval, campaignDescription) are required"
+            });
+        }
+
+        // Validate currency
+        if (!isCurrencySupported(currency)) {
+            return res.status(400).json({
+                error: "Unsupported currency",
+                message: `Currency ${currency} is not supported. Supported currencies: ${getSupportedCurrencies().join(', ')}`
+            });
+        }
+
+        // Validate amount
+        if (typeof amount !== 'number' || amount <= 0) {
+            return res.status(400).json({
+                error: "Invalid amount",
+                message: "Amount must be a positive number"
+            });
+        }
+
         if (subscriptions[donorId]) {
             return res.status(400).json({
                 error: "Subscription already exists",
                 message: "Subscription already exists"
             });
         }
+
+        // Convert amount to USD for normalization
+        const amountInUSD = convertToUSD(amount, currency);
 
         // Analyze campaign using LLM
         let campaignAnalysis;
@@ -42,6 +70,7 @@ app.post("/subscriptions", async (req, res) => {
             donorId,
             amount,
             currency,
+            amountInUSD,
             interval,
             campaignDescription,
             campaignTags: campaignAnalysis.tags,
@@ -72,7 +101,16 @@ app.post("/subscriptions", async (req, res) => {
 app.get("/subscriptions", async(req, res) => {
     try{
         const result = Object.values(subscriptions);
-        return res.status(200).json(result);
+
+        // Filter out amountInUSD from each subscription
+        const filteredSubscriptions = await filterSubscriptions(result, ["amountInUSD"]);
+
+        return res.status(200).json({
+            subscriptions: filteredSubscriptions,
+            summary: {
+                totalSubscriptions: result.length
+            }
+        });
     } catch (error) {
         console.error("Error getting subscriptions:", error);
         res.status(500).json({
@@ -102,6 +140,20 @@ app.delete("/subscriptions/:donorId", async(req, res) => {
     }
 });
 
+/**
+ *
+ * @param {*} subscriptions
+ * @returns
+ */
+async function filterSubscriptions(subscriptions, keysToFilter) {
+    const result = Object.values(subscriptions);
+    const filteredSubscriptions = result.map(subscription => {
+        const filtered = { ...subscription };
+        keysToFilter.forEach(key => delete filtered[key]);
+        return filtered;
+    });
+    return filteredSubscriptions;
+}
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
