@@ -10,6 +10,8 @@ app.use(express.json());
 
 const subscriptions = {};
 
+const transactions = []
+
 /**
  * Create a subscription
  * @param {string} donorId - The donor id
@@ -76,7 +78,8 @@ app.post("/subscriptions", async (req, res) => {
             campaignTags: campaignAnalysis.tags,
             campaignSummary: campaignAnalysis.summary,
             createdAt: new Date().toISOString(),
-            active: true
+            active: true,
+            lastChargedAt: null
         };
 
         subscriptions[donorId] = subscription;
@@ -156,6 +159,87 @@ async function filterSubscriptions(subscriptions, keysToFilter) {
     });
     return filteredSubscriptions;
 }
+
+function processChargedSubscription(subscription, now) {
+    if (!subscription.active) return false;
+
+    if (!subscription.lastChargedAt) return true;
+
+    const lastChargedAt = new Date(subscription.lastChargedAt);
+
+    const diffInMinutes = (now - lastChargedAt) / (1000 * 60);
+    const diffInDays = diffInMinutes / 1440; // 1440 minutes = 1 day
+
+    switch (subscription.interval) {
+        case 'minute':
+        console.log('Inside minutes')
+            return  diffInMinutes >=  1;
+
+        case 'daily':
+            return diffInDays >=  1;
+
+        case 'weekly':
+            return diffInDays >=  7;
+
+        case 'monthly':
+            return diffInDays >=  30;
+
+        case 'yearly':
+            return diffInDays >=  365;
+
+        default:
+            return false;
+    }
+}
+
+function processCharges () {
+    Object.values(subscriptions).forEach(subscription => {
+        const now = new Date();
+        if (processChargedSubscription(subscription, now)) {
+            const transaction = {
+                id: crypto.randomUUID(),
+                donorId: subscription.donorId,
+                amount: subscription.amount,
+                currency: subscription.currency,
+                amountInUSD: subscription.amountInUSD,
+                interval: subscription.interval,
+                campaignDescription: subscription.campaignDescription,
+                campaignTags: subscription.campaignTags,
+                campaignSummary: subscription.campaignSummary,
+                createdAt: new Date().toISOString(),
+                lastChargedAt: new Date().toISOString(),
+            }
+            transactions.push(transaction);
+            subscription.lastChargedAt = now;
+        }
+    });
+}
+
+app.get("/transactions", async(req, res) => {
+    try{
+        const result = Object.values(transactions);
+        return res.status(200).json({
+            transactions: result,
+            summary: {
+                totalSubscriptions: result.length
+            }
+        });
+    } catch (error) {
+        console.error("Error getting transactions:", error);
+        res.status(500).json({
+            error: "Failed to get transactions",
+            message: error.message
+        });
+    }
+});
+
+setInterval(()  => {
+    console.log("Processing charges");
+
+
+    processCharges();
+}, 5000);
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
