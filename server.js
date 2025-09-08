@@ -190,6 +190,12 @@ async function filterSubscriptions(subscriptions, keysToFilter) {
     return filteredSubscriptions;
 }
 
+/**
+ * Process charges for a subscription
+ * @param {object} subscription - The subscription
+ * @param {Date} now - The current date
+ * @returns {boolean} - True if charged, false otherwise
+ */
 function processChargedSubscription(subscription, now) {
     if (!subscription.active) return false;
 
@@ -221,6 +227,9 @@ function processChargedSubscription(subscription, now) {
     }
 }
 
+/**
+ * Process charges for active subscriptions
+ */
 function processCharges () {
     Object.values(subscriptions).forEach(subscription => {
         const now = new Date();
@@ -276,8 +285,6 @@ app.get("/transactions", async(req, res) => {
 
 setInterval(()  => {
     console.log("Processing charges");
-
-
     processCharges();
 }, 5000);
 
