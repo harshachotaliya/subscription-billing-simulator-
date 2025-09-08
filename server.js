@@ -164,7 +164,10 @@ app.delete("/subscriptions/:donorId", async(req, res) => {
         if (!subscriptions[donorId]) {
             return res.status(404).json({ error: "Subscription not found", message: "Failed to delete subscription" });
         }
-        delete subscriptions[donorId];
+        let subscription = subscriptions[donorId];
+        subscription['active'] = false;
+        subscription['deletedAt'] = new Date().toISOString();
+        subscriptions[donorId] = subscription;
         return res.status(200).json({ message: "Subscription deleted successfully" });
     } catch (error) {
         console.error("Error deleting subscription:", error);
@@ -251,7 +254,8 @@ function processCharges () {
 app.get("/transactions", async(req, res) => {
     try{
         const {donorId} = req.query;
-        let result = Object.values(transactions);
+        let isActiveDonerIds = Object.values(subscriptions).filter(subscription => subscription.active).map(subscription => subscription.donorId);
+        let result = Object.values(transactions).filter(transaction => isActiveDonerIds.includes(transaction.donorId));
         if (donorId) {
             result = result.filter(transaction => transaction.donorId === donorId);
         }
