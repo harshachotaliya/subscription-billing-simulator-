@@ -12,6 +12,25 @@ const subscriptions = {};
 
 const transactions = []
 
+const SUPPORTED_INTERVALS = ['minute', 'daily', 'weekly', 'monthly', 'yearly'];
+
+/**
+ * Validate if a interval is supported
+ * @param {string} interval - The interval to validate
+ * @returns {boolean} - True if supported, false otherwise
+ */
+export function isIntervalSupported(interval) {
+    return SUPPORTED_INTERVALS.includes(interval);
+}
+
+/**
+ * Get all supported intervals
+ * @returns {string[]} - Array of supported currency codes
+ */
+export function getSupportedIntervals() {
+    return SUPPORTED_INTERVALS;
+}
+
 /**
  * Create a subscription
  * @param {string} donorId - The donor id
@@ -38,6 +57,14 @@ app.post("/subscriptions", async (req, res) => {
             return res.status(400).json({
                 error: "Unsupported currency",
                 message: `Currency ${currency} is not supported. Supported currencies: ${getSupportedCurrencies().join(', ')}`
+            });
+        }
+
+        // Validate interval
+        if (!isIntervalSupported(interval)) {
+            return res.status(400).json({
+                error: "Unsupported interval",
+                message: `Interval ${interval} is not supported. Supported intervals: ${getSupportedIntervals().join(', ')}`
             });
         }
 
@@ -172,7 +199,6 @@ function processChargedSubscription(subscription, now) {
 
     switch (subscription.interval) {
         case 'minute':
-        console.log('Inside minutes')
             return  diffInMinutes >=  1;
 
         case 'daily':
