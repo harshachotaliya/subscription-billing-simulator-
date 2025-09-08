@@ -241,13 +241,24 @@ function processCharges () {
     });
 }
 
+/**
+ * Get all transactions
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ * @returns {object} - The transactions
+ * @param {string} donorId - The donor id
+*/
 app.get("/transactions", async(req, res) => {
     try{
-        const result = Object.values(transactions);
+        const {donorId} = req.query;
+        let result = Object.values(transactions);
+        if (donorId) {
+            result = result.filter(transaction => transaction.donorId === donorId);
+        }
         return res.status(200).json({
             transactions: result,
             summary: {
-                totalSubscriptions: result.length
+                totalTransactions: result.length
             }
         });
     } catch (error) {
