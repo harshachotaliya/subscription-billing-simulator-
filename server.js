@@ -75,7 +75,8 @@ app.post("/subscriptions", async (req, res) => {
             campaignDescription,
             campaignTags: campaignAnalysis.tags,
             campaignSummary: campaignAnalysis.summary,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            active: true
         };
 
         subscriptions[donorId] = subscription;
@@ -103,7 +104,8 @@ app.get("/subscriptions", async(req, res) => {
         const result = Object.values(subscriptions);
 
         // Filter out amountInUSD from each subscription
-        const filteredSubscriptions = await filterSubscriptions(result, ["amountInUSD"]);
+        let filteredSubscriptions = await filterSubscriptions(result, ["amountInUSD"]);
+        filteredSubscriptions = filteredSubscriptions.filter(subscription => subscription.active);
 
         return res.status(200).json({
             subscriptions: filteredSubscriptions,
