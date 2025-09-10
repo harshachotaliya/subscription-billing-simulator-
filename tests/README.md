@@ -42,7 +42,7 @@ tests/
 
 Test environment variables are configured in `.env.test`:
 - `NODE_ENV=test`
-- `OPENAI_API_KEY=test-key-for-testing`
+- `GEMINI_API_KEY=test-key-for-testing`
 - `PORT=3001`
 
 ## Writing New Tests

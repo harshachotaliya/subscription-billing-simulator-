@@ -82,7 +82,7 @@ GET /transactions
 3. **Set up environment variables**
    Create a `.env` file in the root directory:
    ```env
-   OPENAI_API_KEY=your_openai_api_key_here
+   GEMINI_API_KEY=your_GEMINI_API_KEY_here
    PORT=3000
    ```
 
@@ -105,14 +105,14 @@ GET /transactions
 
 2. **Run the container**
    ```bash
-   docker run -p 3000:3000 -e OPENAI_API_KEY=your_key_here subscription-billing-simulator
+   docker run -p 3000:3000 -e GEMINI_API_KEY=your_key_here subscription-billing-simulator
    ```
 
 ## Environment Variables
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `OPENAI_API_KEY` | OpenAI API key for campaign analysis | No | Uses fallback analysis |
+| `GEMINI_API_KEY` | OpenAI API key for campaign analysis | No | Uses fallback analysis |
 | `PORT` | Server port | No | 3000 |
 
 

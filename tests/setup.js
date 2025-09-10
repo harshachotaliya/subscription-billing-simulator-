@@ -8,8 +8,8 @@ dotenv.config({ path: '.env.test' });
 process.env.NODE_ENV = 'test';
 
 // Provide fallback for required environment variables
-if (!process.env.OPENAI_API_KEY) {
-  process.env.OPENAI_API_KEY = 'test-key-for-testing';
+if (!process.env.GEMINI_API_KEY) {
+  process.env.GEMINI_API_KEY = 'test-key-for-testing';
 }
 
 export default undefined;

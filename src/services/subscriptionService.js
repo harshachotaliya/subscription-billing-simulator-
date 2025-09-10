@@ -37,7 +37,7 @@ export async function createNewSubscription(subscriptionData) {
 
     // Analyze campaign using LLM
     let campaignAnalysis;
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
         campaignAnalysis = await analyzeCampaign(campaignDescription);
     } else {
         console.log("OpenAI API key not found, using fallback analysis");
